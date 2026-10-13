@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 220" role="img" aria-labelledby="hiw">
-  <title id="hiw">How RespondHelper works in three steps</title>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 220">
   <rect width="1080" height="220" fill="#FAF7F2"/>
 
   <!-- Card 1 -->
@@ -29,6 +29,6 @@
   <text x="824" y="58" font-family="system-ui, sans-serif" font-size="20" font-weight="700" fill="#1F2933">Track live</text>
   <text x="776" y="100" font-family="system-ui, sans-serif" font-size="15" fill="#5B6770">Status timeline, map pins,</text>
   <text x="776" y="122" font-family="system-ui, sans-serif" font-size="15" fill="#5B6770">and notifications update over</text>
-  <text x="776" y="144" font-family="system-ui, sans-serif" font-size="15" fill="#5B6770">Socket.io  no refresh needed.</text>
-  <text x="776" y="176" font-family="system-ui, sans-serif" font-size="13" fill="#0F5C5C">Submitted ’ Resolved</text>
+  <text x="776" y="144" font-family="system-ui, sans-serif" font-size="15" fill="#5B6770">Socket.io - no refresh needed.</text>
+  <text x="776" y="176" font-family="system-ui, sans-serif" font-size="13" fill="#0F5C5C">Submitted to Resolved</text>
 </svg>

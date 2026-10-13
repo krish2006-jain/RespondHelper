@@ -1,7 +1,7 @@
 # RespondHelper
 
 <p align="center">
-  <img src="docs/assets/banner.svg" alt="RespondHelper — Relief Network. Survivors raise requests. Verified volunteers, NGOs, shelters and suppliers respond in real time." width="100%">
+  <img src="docs/assets/banner.svg" alt="" width="100%">
 </p>
 
 <p align="center">
@@ -22,7 +22,7 @@ The product UI is branded **Relief Network**. Matching uses location, urgency, a
 ## How it works
 
 <p align="center">
-  <img src="docs/assets/how-it-works.svg" alt="1 Ask for help. 2 Get matched. 3 Track live." width="100%">
+  <img src="docs/assets/how-it-works.svg" alt="" width="100%">
 </p>
 
 ```mermaid
@@ -153,7 +153,7 @@ flowchart LR
 ## Emergency map
 
 <p align="center">
-  <img src="docs/assets/map-legend.svg" alt="Map legend: critical and high requests, volunteers, NGOs, shelters, resources. Colour and shape both identify a marker." width="100%">
+  <img src="docs/assets/map-legend.svg" alt="" width="100%">
 </p>
 
 ---
@@ -163,7 +163,7 @@ flowchart LR
 Weights live in environment variables. Example: a **critical medicine** request for **20 units**.
 
 <p align="center">
-  <img src="docs/assets/matching.svg" alt="NGO A is the best match with 50 units at 2 km. NGO B has 100 units at 8 km. NGO C is 1 km away but only has 15 units." width="100%">
+  <img src="docs/assets/matching.svg" alt="" width="100%">
 </p>
 
 **Resources:** urgency + distance + quantity + availability. Insufficient stock is penalized. Results include a short reason such as “Has 50 units, 2 km away.”
@@ -177,7 +177,7 @@ Weights live in environment variables. Example: a **critical medicine** request 
 Red is reserved for real urgency.
 
 <p align="center">
-  <img src="docs/assets/palette.svg" alt="Colour tokens: primary teal, accent amber, SOS red, success green, NGO blue, shelter purple, surface white, text charcoal." width="100%">
+  <img src="docs/assets/palette.svg" alt="" width="100%">
 </p>
 
 Full UI rules: [`design.md`](design.md).

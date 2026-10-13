@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 280" role="img" aria-labelledby="match">
-  <title id="match">Example resource match for a critical medicine request</title>
-  <rect width="1080" height="280" fill="#FAF7F2"/>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 280">
+<rect width="1080" height="280" fill="#FAF7F2"/>
 
   <rect x="16" y="16" width="280" height="248" rx="12" fill="#FFFFFF" stroke="#E6E0D6"/>
   <text x="36" y="52" font-family="system-ui, sans-serif" font-size="13" fill="#C8352B" font-weight="700">REQUEST</text>

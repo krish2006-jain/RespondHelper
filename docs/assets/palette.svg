@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 140" role="img" aria-labelledby="pal">
-  <title id="pal">Relief Network colour tokens</title>
-  <rect width="1080" height="140" fill="#FAF7F2"/>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 140">
+<rect width="1080" height="140" fill="#FAF7F2"/>
 
   <g transform="translate(16,16)">
     <rect width="120" height="72" rx="8" fill="#0F5C5C"/>
