@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 280" role="img" aria-labelledby="match">
+  <title id="match">Example resource match for a critical medicine request</title>
+  <rect width="1080" height="280" fill="#FAF7F2"/>
+
+  <rect x="16" y="16" width="280" height="248" rx="12" fill="#FFFFFF" stroke="#E6E0D6"/>
+  <text x="36" y="52" font-family="system-ui, sans-serif" font-size="13" fill="#C8352B" font-weight="700">REQUEST</text>
+  <text x="36" y="84" font-family="system-ui, sans-serif" font-size="20" font-weight="700" fill="#1F2933">Medicine</text>
+  <text x="36" y="112" font-family="system-ui, sans-serif" font-size="14" fill="#5B6770">Priority: Critical</text>
+  <text x="36" y="136" font-family="system-ui, sans-serif" font-size="14" fill="#5B6770">Need: 20 units</text>
+  <text x="36" y="160" font-family="system-ui, sans-serif" font-size="14" fill="#5B6770">Area: 4 km search</text>
+  <rect x="36" y="188" width="88" height="24" rx="12" fill="#C8352B"/>
+  <text x="80" y="205" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" fill="#FFFFFF">Critical</text>
+
+  <!-- NGO A best -->
+  <rect x="328" y="16" width="232" height="248" rx="12" fill="#FFFFFF" stroke="#2F8F5B" stroke-width="2"/>
+  <rect x="348" y="32" width="96" height="22" rx="11" fill="#2F8F5B"/>
+  <text x="396" y="48" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">BEST MATCH</text>
+  <text x="348" y="88" font-family="system-ui, sans-serif" font-size="18" font-weight="700" fill="#1F2933">NGO A</text>
+  <text x="348" y="118" font-family="system-ui, sans-serif" font-size="14" fill="#5B6770">50 units in stock</text>
+  <text x="348" y="142" font-family="system-ui, sans-serif" font-size="14" fill="#5B6770">2 km away</text>
+  <text x="348" y="178" font-family="system-ui, sans-serif" font-size="13" fill="#0F5C5C">Enough stock, closest</text>
+  <rect x="348" y="208" width="160" height="10" rx="5" fill="#E6E0D6"/>
+  <rect x="348" y="208" width="148" height="10" rx="5" fill="#2F8F5B"/>
+
+  <!-- NGO B -->
+  <rect x="580" y="16" width="232" height="248" rx="12" fill="#FFFFFF" stroke="#E6E0D6"/>
+  <text x="600" y="56" font-family="system-ui, sans-serif" font-size="13" fill="#E8A33D" font-weight="700">GOOD</text>
+  <text x="600" y="88" font-family="system-ui, sans-serif" font-size="18" font-weight="700" fill="#1F2933">NGO B</text>
+  <text x="600" y="118" font-family="system-ui, sans-serif" font-size="14" fill="#5B6770">100 units in stock</text>
+  <text x="600" y="142" font-family="system-ui, sans-serif" font-size="14" fill="#5B6770">8 km away</text>
+  <text x="600" y="178" font-family="system-ui, sans-serif" font-size="13" fill="#5B6770">Plenty of stock, farther</text>
+  <rect x="600" y="208" width="160" height="10" rx="5" fill="#E6E0D6"/>
+  <rect x="600" y="208" width="110" height="10" rx="5" fill="#E8A33D"/>
+
+  <!-- NGO C -->
+  <rect x="832" y="16" width="232" height="248" rx="12" fill="#FFFFFF" stroke="#E6E0D6"/>
+  <text x="852" y="56" font-family="system-ui, sans-serif" font-size="13" fill="#C8352B" font-weight="700">SHORTFALL</text>
+  <text x="852" y="88" font-family="system-ui, sans-serif" font-size="18" font-weight="700" fill="#1F2933">NGO C</text>
+  <text x="852" y="118" font-family="system-ui, sans-serif" font-size="14" fill="#5B6770">15 units in stock</text>
+  <text x="852" y="142" font-family="system-ui, sans-serif" font-size="14" fill="#5B6770">1 km away</text>
+  <text x="852" y="178" font-family="system-ui, sans-serif" font-size="13" fill="#5B6770">Closest, not enough stock</text>
+  <rect x="852" y="208" width="160" height="10" rx="5" fill="#E6E0D6"/>
+  <rect x="852" y="208" width="64" height="10" rx="5" fill="#C8352B"/>
+</svg>

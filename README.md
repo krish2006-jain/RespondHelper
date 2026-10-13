@@ -1,10 +1,44 @@
 # RespondHelper
 
-Real-time disaster management and emergency response platform. Survivors request help. Verified volunteers, NGOs, shelters, and resource providers respond. Admins run the network from a command center.
+<p align="center">
+  <img src="docs/assets/banner.svg" alt="RespondHelper — Relief Network. Survivors raise requests. Verified volunteers, NGOs, shelters and suppliers respond in real time." width="100%">
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/stack-MERN-0F5C5C?style=flat-square" alt="MERN stack">
+  <img src="https://img.shields.io/badge/realtime-Socket.io-E8A33D?style=flat-square" alt="Socket.io">
+  <img src="https://img.shields.io/badge/maps-Leaflet%20%2B%20OSM-2B6CB0?style=flat-square" alt="Leaflet OpenStreetMap">
+  <img src="https://img.shields.io/badge/SOS-3%20taps-C8352B?style=flat-square" alt="SOS in three taps">
+</p>
+
+Real-time disaster management and emergency response. Survivors request help. Verified volunteers, NGOs, shelters, and resource providers respond. Admins run the network from a command center.
 
 The product UI is branded **Relief Network**. Matching uses location, urgency, availability, and verification so the closest capable responder gets the request.
 
 **Repository:** [krish2006-jain/RespondHelper](https://github.com/krish2006-jain/RespondHelper)
+
+---
+
+## How it works
+
+<p align="center">
+  <img src="docs/assets/how-it-works.svg" alt="1 Ask for help. 2 Get matched. 3 Track live." width="100%">
+</p>
+
+```mermaid
+flowchart LR
+  S["Survivor SOS"] --> R["Request in MongoDB"]
+  R --> M["Matching engine"]
+  M --> V["Nearby volunteer"]
+  M --> N["NGO / stock"]
+  M --> H["Shelter beds"]
+  V --> L["Live timeline"]
+  N --> L
+  H --> L
+  L --> S
+  A["Admin"] -.->|verify responders| V
+  A -.-> N
+```
 
 ---
 
@@ -20,7 +54,34 @@ The product UI is branded **Relief Network**. Matching uses location, urgency, a
 
 ---
 
-## Stack
+## Architecture
+
+```mermaid
+flowchart TB
+  subgraph Browser["Client — React + Vite"]
+    UI["Role dashboards"]
+    MAP["Leaflet map"]
+    SOCKC["Socket.io client"]
+  end
+
+  subgraph API["Server — Express"]
+    REST["REST /api/v1"]
+    MATCH["Matching engine"]
+    CRON["Inventory cron"]
+    SOCKS["Socket.io"]
+  end
+
+  DB[("MongoDB + 2dsphere")]
+
+  UI --> REST
+  MAP --> REST
+  SOCKC <--> SOCKS
+  REST --> MATCH
+  REST --> DB
+  MATCH --> DB
+  CRON --> DB
+  SOCKS --> REST
+```
 
 | Layer | Tech |
 |---|---|
@@ -31,6 +92,20 @@ The product UI is branded **Relief Network**. Matching uses location, urgency, a
 ---
 
 ## Roles
+
+```mermaid
+flowchart TB
+  P["Public landing"] --> L["Login / register"]
+  L --> SV["Survivor /survivor"]
+  L --> VO["Volunteer /volunteer"]
+  L --> NGO["NGO / resource /ngo"]
+  L --> SH["Shelter /shelter"]
+  L --> AD["Admin /admin"]
+  SV -->|"SOS + track"| MAP["Shared /map"]
+  VO -->|"nearby tasks"| MAP
+  SH -->|"occupancy"| MAP
+  AD -->|"verify + KPIs"| ALL["Whole network"]
+```
 
 | Role | After login | Responsibility |
 |---|---|---|
@@ -47,11 +122,65 @@ Survivors can act immediately after sign-up. Other responder roles need admin ap
 
 ## Request lifecycle
 
-`Submitted` → `Verified` → `Assigned` → `In Progress` → `Delivered` → `Resolved`
+```mermaid
+stateDiagram-v2
+  [*] --> Submitted
+  Submitted --> Verified
+  Submitted --> Cancelled
+  Verified --> Assigned
+  Verified --> Cancelled
+  Assigned --> InProgress: In Progress
+  InProgress --> Delivered
+  Delivered --> Resolved
+  Assigned --> Rejected
+  Resolved --> [*]
+```
 
-Also: `Cancelled`, `Rejected`. Every change is stored in `statusHistory`.
+Every change is stored in `statusHistory`.
 
-Volunteer task steps: `Accepted` → `On the Way` → `Arrived` → `Assistance Provided` → `Completed`.
+Volunteer task steps:
+
+```mermaid
+flowchart LR
+  A[Accepted] --> B[On the Way]
+  B --> C[Arrived]
+  C --> D[Assistance Provided]
+  D --> E[Completed]
+```
+
+---
+
+## Emergency map
+
+<p align="center">
+  <img src="docs/assets/map-legend.svg" alt="Map legend: critical and high requests, volunteers, NGOs, shelters, resources. Colour and shape both identify a marker." width="100%">
+</p>
+
+---
+
+## Matching
+
+Weights live in environment variables. Example: a **critical medicine** request for **20 units**.
+
+<p align="center">
+  <img src="docs/assets/matching.svg" alt="NGO A is the best match with 50 units at 2 km. NGO B has 100 units at 8 km. NGO C is 1 km away but only has 15 units." width="100%">
+</p>
+
+**Resources:** urgency + distance + quantity + availability. Insufficient stock is penalized. Results include a short reason such as “Has 50 units, 2 km away.”
+
+**Volunteers:** distance + skill fit + request priority + availability + current workload, limited to the volunteer’s service radius and `VOLUNTEER_MAX_ACTIVE_TASKS`. Labels: Great / Good / Possible.
+
+---
+
+## Colour system
+
+Red is reserved for real urgency.
+
+<p align="center">
+  <img src="docs/assets/palette.svg" alt="Colour tokens: primary teal, accent amber, SOS red, success green, NGO blue, shelter purple, surface white, text charcoal." width="100%">
+</p>
+
+Full UI rules: [`design.md`](design.md).
 
 ---
 
@@ -170,6 +299,7 @@ RespondHelper/
 │       ├── services/       # matching, notifications, inventory cron
 │       ├── seed/
 │       └── server.js
+├── docs/assets/            # README diagrams
 ├── env.example
 ├── req.md                  # Product requirements
 ├── design.md               # UI / UX system
@@ -181,6 +311,17 @@ RespondHelper/
 ## API (prefix `/api/v1`)
 
 Responses use `{ success, message, data }`. Errors use `{ success: false, message, errors? }`.
+
+```mermaid
+flowchart LR
+  AUTH["/auth"] --> REQ["/requests"]
+  REQ --> VOL["/volunteers"]
+  REQ --> RES["/resources"]
+  REQ --> SHE["/shelters"]
+  MAP["/map"] --> REQ
+  VER["/verification"] --> ADM["/admin"]
+  NTF["/notifications"] --> AUTH
+```
 
 | Area | Examples |
 |---|---|
@@ -195,16 +336,6 @@ Responses use `{ success, message, data }`. Errors use `{ success: false, messag
 | Admin | `GET /admin/stats`, users, block, analytics |
 
 The backend enforces roles. A survivor calling an admin route receives `403`.
-
----
-
-## Matching (high level)
-
-**Resources:** urgency + distance + quantity + availability. Insufficient stock is penalized. Results include a short reason such as “Has 50 units, 2 km away.”
-
-**Volunteers:** distance + skill fit + request priority + availability + current workload, limited to the volunteer’s service radius and `VOLUNTEER_MAX_ACTIVE_TASKS`. Labels: Great / Good / Possible.
-
-Weights live in environment variables so they can be tuned without code changes.
 
 ---
 

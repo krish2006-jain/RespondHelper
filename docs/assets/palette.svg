@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 140" role="img" aria-labelledby="pal">
+  <title id="pal">Relief Network colour tokens</title>
+  <rect width="1080" height="140" fill="#FAF7F2"/>
+
+  <g transform="translate(16,16)">
+    <rect width="120" height="72" rx="8" fill="#0F5C5C"/>
+    <text x="8" y="100" font-family="system-ui, sans-serif" font-size="12" fill="#5B6770">Primary</text>
+    <text x="8" y="116" font-family="ui-monospace, monospace" font-size="12" fill="#1F2933">#0F5C5C</text>
+  </g>
+  <g transform="translate(152,16)">
+    <rect width="120" height="72" rx="8" fill="#E8A33D"/>
+    <text x="8" y="100" font-family="system-ui, sans-serif" font-size="12" fill="#5B6770">Accent</text>
+    <text x="8" y="116" font-family="ui-monospace, monospace" font-size="12" fill="#1F2933">#E8A33D</text>
+  </g>
+  <g transform="translate(288,16)">
+    <rect width="120" height="72" rx="8" fill="#C8352B"/>
+    <text x="8" y="100" font-family="system-ui, sans-serif" font-size="12" fill="#5B6770">SOS / danger</text>
+    <text x="8" y="116" font-family="ui-monospace, monospace" font-size="12" fill="#1F2933">#C8352B</text>
+  </g>
+  <g transform="translate(424,16)">
+    <rect width="120" height="72" rx="8" fill="#2F8F5B"/>
+    <text x="8" y="100" font-family="system-ui, sans-serif" font-size="12" fill="#5B6770">Success</text>
+    <text x="8" y="116" font-family="ui-monospace, monospace" font-size="12" fill="#1F2933">#2F8F5B</text>
+  </g>
+  <g transform="translate(560,16)">
+    <rect width="120" height="72" rx="8" fill="#2B6CB0"/>
+    <text x="8" y="100" font-family="system-ui, sans-serif" font-size="12" fill="#5B6770">NGO / info</text>
+    <text x="8" y="116" font-family="ui-monospace, monospace" font-size="12" fill="#1F2933">#2B6CB0</text>
+  </g>
+  <g transform="translate(696,16)">
+    <rect width="120" height="72" rx="8" fill="#6B4FA0"/>
+    <text x="8" y="100" font-family="system-ui, sans-serif" font-size="12" fill="#5B6770">Shelter</text>
+    <text x="8" y="116" font-family="ui-monospace, monospace" font-size="12" fill="#1F2933">#6B4FA0</text>
+  </g>
+  <g transform="translate(832,16)">
+    <rect width="120" height="72" rx="8" fill="#FFFFFF" stroke="#E6E0D6"/>
+    <text x="8" y="100" font-family="system-ui, sans-serif" font-size="12" fill="#5B6770">Surface</text>
+    <text x="8" y="116" font-family="ui-monospace, monospace" font-size="12" fill="#1F2933">#FFFFFF</text>
+  </g>
+  <g transform="translate(968,16)">
+    <rect width="96" height="72" rx="8" fill="#1F2933"/>
+    <text x="8" y="100" font-family="system-ui, sans-serif" font-size="12" fill="#5B6770">Text</text>
+    <text x="8" y="116" font-family="ui-monospace, monospace" font-size="12" fill="#1F2933">#1F2933</text>
+  </g>
+</svg>

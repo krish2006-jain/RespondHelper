@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 160" role="img" aria-labelledby="legend">
+  <title id="legend">Emergency map marker legend</title>
+  <rect width="1080" height="160" fill="#FFFFFF" stroke="#E6E0D6"/>
+
+  <g transform="translate(40,40)">
+    <path d="M18,0 C8,0 2,8 2,16 C2,28 18,44 18,44 C18,44 34,28 34,16 C34,8 28,0 18,0Z" fill="#C8352B"/>
+    <circle cx="18" cy="14" r="5" fill="#FAF7F2"/>
+    <text x="48" y="22" font-family="system-ui, sans-serif" font-size="15" font-weight="600" fill="#1F2933">Critical</text>
+    <text x="48" y="42" font-family="system-ui, sans-serif" font-size="12" fill="#5B6770">Requests</text>
+  </g>
+  <g transform="translate(210,40)">
+    <path d="M18,0 C8,0 2,8 2,16 C2,28 18,44 18,44 C18,44 34,28 34,16 C34,8 28,0 18,0Z" fill="#E27D26"/>
+    <text x="18" y="20" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="700" fill="#FAF7F2">!</text>
+    <text x="48" y="22" font-family="system-ui, sans-serif" font-size="15" font-weight="600" fill="#1F2933">High</text>
+    <text x="48" y="42" font-family="system-ui, sans-serif" font-size="12" fill="#5B6770">Requests</text>
+  </g>
+  <g transform="translate(380,40)">
+    <circle cx="18" cy="22" r="16" fill="#2F8F5B"/>
+    <text x="48" y="22" font-family="system-ui, sans-serif" font-size="15" font-weight="600" fill="#1F2933">Volunteers</text>
+    <text x="48" y="42" font-family="system-ui, sans-serif" font-size="12" fill="#5B6770">Available</text>
+  </g>
+  <g transform="translate(560,40)">
+    <rect x="2" y="6" width="32" height="32" rx="4" fill="#2B6CB0"/>
+    <text x="48" y="22" font-family="system-ui, sans-serif" font-size="15" font-weight="600" fill="#1F2933">NGOs</text>
+    <text x="48" y="42" font-family="system-ui, sans-serif" font-size="12" fill="#5B6770">Organisations</text>
+  </g>
+  <g transform="translate(740,40)">
+    <polygon points="18,4 34,38 2,38" fill="#6B4FA0"/>
+    <text x="48" y="22" font-family="system-ui, sans-serif" font-size="15" font-weight="600" fill="#1F2933">Shelters</text>
+    <text x="48" y="42" font-family="system-ui, sans-serif" font-size="12" fill="#5B6770">Capacity</text>
+  </g>
+  <g transform="translate(920,40)">
+    <rect x="4" y="8" width="28" height="28" rx="14" fill="#E8A33D"/>
+    <text x="48" y="22" font-family="system-ui, sans-serif" font-size="15" font-weight="600" fill="#1F2933">Resources</text>
+    <text x="48" y="42" font-family="system-ui, sans-serif" font-size="12" fill="#5B6770">Stock</text>
+  </g>
+  <text x="40" y="132" font-family="system-ui, sans-serif" font-size="13" fill="#5B6770">Colour and shape both identify a marker so the map stays usable without relying on colour alone.</text>
+</svg>
