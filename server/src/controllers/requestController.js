@@ -118,7 +118,7 @@ export const getRequests = async (req, res, next) => {
     }
 
     if (status) {
-      query.status = status;
+      query.status = status.includes(',') ? { $in: status.split(',').map((s) => s.trim()) } : status;
     }
     if (priority) {
       query.priority = priority;

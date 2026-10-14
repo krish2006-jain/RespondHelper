@@ -7,14 +7,15 @@ export const connectDB = async () => {
     const conn = await mongoose.connect(ENV.MONGO_URI, {
       dbName: ENV.MONGO_DB_NAME,
       autoIndex: true,
+      serverSelectionTimeoutMS: 10000,
+      bufferCommands: false,
     });
     logger.info(`MongoDB Connected: ${conn.connection.host} (DB: ${conn.connection.name})`);
     return conn;
   } catch (error) {
     logger.error(`MongoDB Connection Error: ${error.message}`);
-    // Don't kill process immediately in dev to allow debugging/retry
-    if (ENV.NODE_ENV === 'production') {
-      process.exit(1);
-    }
+    throw new Error(
+      'MongoDB is unavailable. Check MONGO_URI, Atlas DNS/network access, and that the database is running.'
+    );
   }
 };

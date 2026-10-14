@@ -230,3 +230,43 @@ export const reassignRequest = async (req, res, next) => {
     next(error);
   }
 };
+
+// GET /admin/responders
+export const getAvailableResponders = async (req, res, next) => {
+  try {
+    const responders = await User.find({
+      role: { $in: ['volunteer', 'ngo', 'shelter', 'resource_provider'] },
+      verificationStatus: 'verified',
+      isBlocked: false,
+    }).select('name email phone role location address');
+
+    const volunteerProfiles = await VolunteerProfile.find({
+      userId: { $in: responders.map((r) => r._id) },
+    }).select('userId skills isAvailable activeTaskCount serviceRadiusKm');
+
+    const profileMap = new Map();
+    volunteerProfiles.forEach((p) => {
+      if (p.userId) profileMap.set(p.userId.toString(), p);
+    });
+
+    const enriched = responders.map((r) => {
+      const prof = profileMap.get(r._id.toString());
+      return {
+        _id: r._id,
+        name: r.name,
+        email: r.email,
+        phone: r.phone,
+        role: r.role,
+        skills: prof?.skills || [],
+        isAvailable: prof ? prof.isAvailable : true,
+        activeTaskCount: prof?.activeTaskCount || 0,
+        serviceRadiusKm: prof?.serviceRadiusKm || 15,
+        address: r.address || '',
+      };
+    });
+
+    return sendSuccess(res, enriched, 'Available responders retrieved');
+  } catch (error) {
+    next(error);
+  }
+};

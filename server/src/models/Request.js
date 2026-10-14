@@ -88,6 +88,11 @@ const requestSchema = new mongoose.Schema(
       responderName: { type: String },
       responderPhone: { type: String },
       assignedAt: { type: Date },
+      taskStatus: {
+        type: String,
+        enum: ['Assigned', 'Accepted', 'On the Way', 'Arrived', 'Assistance Provided', 'Completed'],
+        default: 'Assigned',
+      },
     },
     statusHistory: [
       {

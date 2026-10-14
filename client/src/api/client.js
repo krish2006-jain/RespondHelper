@@ -8,7 +8,6 @@ const api = axios.create({
   },
 });
 
-// Request Interceptor: Attach Access Token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('accessToken');
@@ -20,13 +19,12 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response Interceptor: Handle 401 & Refresh Token
 api.interceptors.response.use(
-  (response) => response.data, // Unpack { success, message, data } directly
+  (response) => response.data,
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
       const refreshToken = localStorage.getItem('refreshToken');
       if (refreshToken) {
         originalRequest._retry = true;
@@ -51,13 +49,11 @@ api.interceptors.response.use(
       }
     }
 
-    const customError = {
+    return Promise.reject({
       message: error.response?.data?.message || error.message || 'An unexpected error occurred',
       errors: error.response?.data?.errors,
       status: error.response?.status,
-    };
-
-    return Promise.reject(customError);
+    });
   }
 );
 

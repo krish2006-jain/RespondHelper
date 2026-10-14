@@ -209,10 +209,9 @@ export const updateTaskStatus = async (req, res, next) => {
       return sendError(res, 'Request not found', 404);
     }
 
-    const assignment = await Assignment.findOne({
-      requestId: request._id,
-      responderId: req.user._id,
-    });
+    const assignment =
+      (await Assignment.findOne({ requestId: request._id, responderId: req.user._id })) ||
+      (await Assignment.findOne({ requestId: request._id }));
 
     if (assignment) {
       assignment.status = status;
@@ -228,6 +227,19 @@ export const updateTaskStatus = async (req, res, next) => {
     if (status === 'Completed') reqStatus = 'Resolved';
 
     request.status = reqStatus;
+    if (!request.assignedTo) {
+      request.assignedTo = {
+        responderId: req.user._id,
+        responderRole: req.user.role || 'volunteer',
+        responderName: req.user.name,
+        responderPhone: req.user.phone,
+        assignedAt: new Date(),
+        taskStatus: status,
+      };
+    } else {
+      request.assignedTo.taskStatus = status;
+    }
+
     request.statusHistory.push({
       status: reqStatus,
       updatedBy: req.user._id,
@@ -250,6 +262,7 @@ export const updateTaskStatus = async (req, res, next) => {
     }
 
     // Real-time notifications
+    const survivorUserId = request.survivorId?._id || request.survivorId;
     const io = getIO();
     if (io) {
       io.to(`request:${request._id}`).emit('task:status_updated', {
@@ -258,21 +271,25 @@ export const updateTaskStatus = async (req, res, next) => {
         requestStatus: reqStatus,
         updatedBy: req.user.name,
       });
-      io.to(`user:${request.survivorId._id}`).emit('task:status_updated', {
-        requestId: request._id,
-        taskStatus: status,
-        requestStatus: reqStatus,
-      });
+      if (survivorUserId) {
+        io.to(`user:${survivorUserId}`).emit('task:status_updated', {
+          requestId: request._id,
+          taskStatus: status,
+          requestStatus: reqStatus,
+        });
+      }
     }
 
-    await createNotification({
-      recipient: request.survivorId._id,
-      title: `Task Progress: ${status}`,
-      message: `Volunteer ${req.user.name} updated task status to "${status}".`,
-      type: 'status_update',
-      priority: status === 'Completed' ? 'high' : 'normal',
-      link: `/survivor/requests/${request._id}`,
-    });
+    if (survivorUserId) {
+      await createNotification({
+        recipient: survivorUserId,
+        title: `Task Progress: ${status}`,
+        message: `Volunteer ${req.user.name} updated task status to "${status}".`,
+        type: 'status_update',
+        priority: status === 'Completed' ? 'high' : 'normal',
+        link: `/survivor/requests/${request._id}`,
+      }).catch((e) => console.error('Notification error:', e));
+    }
 
     return sendSuccess(res, { request, assignment }, `Task status updated to ${status}`);
   } catch (error) {

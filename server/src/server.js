@@ -130,6 +130,7 @@ const startServer = async () => {
     });
   } catch (error) {
     logger.error(`Failed to start server: ${error.message}`);
+    process.exitCode = 1;
   }
 };
 

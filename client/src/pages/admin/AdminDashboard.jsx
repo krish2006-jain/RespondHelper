@@ -7,6 +7,7 @@ import { volunteerAPI } from '../../api/volunteers';
 import { StatCard } from '../../components/common/StatCard';
 import { Badge } from '../../components/common/Badge';
 import { Button } from '../../components/common/Button';
+import { Modal } from '../../components/common/Modal';
 import { MapView } from '../../components/map/MapView';
 import { formatDateTime, formatTimeAgo } from '../../utils/formatters';
 import {
@@ -36,6 +37,9 @@ import {
   RefreshCw,
   Search,
   ExternalLink,
+  Sparkles,
+  MapPin,
+  Phone,
 } from 'lucide-react';
 
 const PIE_COLORS = ['#C8352B', '#E27D26', '#E8A33D', '#2F8F5B', '#2B6CB0', '#6B4FA0', '#5B6770'];
@@ -57,6 +61,16 @@ export const AdminDashboard = () => {
   // Search & Filters in Users tab
   const [userSearch, setUserSearch] = useState('');
   const [userRoleFilter, setUserRoleFilter] = useState('');
+
+  // Assignment Modal State
+  const [assignModalOpen, setAssignModalOpen] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [availableResponders, setAvailableResponders] = useState([]);
+  const [recommendedMatches, setRecommendedMatches] = useState([]);
+  const [loadingMatches, setLoadingMatches] = useState(false);
+  const [assigningId, setAssigningId] = useState(null);
+  const [responderSearch, setResponderSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all'); // 'all' | 'volunteer' | 'ngo'
 
   const loadAdminData = async () => {
     try {
@@ -112,17 +126,51 @@ export const AdminDashboard = () => {
     }
   };
 
-  const handleManualReassign = async (requestId) => {
-    const responderId = window.prompt('Enter Responder User ID to assign to:');
-    if (!responderId) return;
+  const openAssignModal = async (request) => {
+    setSelectedRequest(request);
+    setAssignModalOpen(true);
+    setLoadingMatches(true);
+    setResponderSearch('');
+    setRoleFilter('all');
     try {
-      await adminAPI.reassignRequest(requestId, responderId);
-      alert('Request reassigned successfully');
-      loadAdminData();
+      const [respondersRes, matchesRes] = await Promise.all([
+        adminAPI.getResponders(),
+        requestAPI.getMatches(request._id),
+      ]);
+      setAvailableResponders(respondersRes.data || []);
+      setRecommendedMatches(matchesRes.data?.recommendedVolunteers || []);
     } catch (err) {
-      alert(err.message || 'Failed to reassign');
+      console.error('Failed to load assignment options:', err);
+    } finally {
+      setLoadingMatches(false);
     }
   };
+
+  const handleConfirmAssignment = async (responderId) => {
+    if (!selectedRequest || !responderId) return;
+    setAssigningId(responderId);
+    try {
+      await adminAPI.reassignRequest(selectedRequest._id, responderId);
+      alert('Request successfully assigned to responder!');
+      setAssignModalOpen(false);
+      setSelectedRequest(null);
+      loadAdminData();
+    } catch (err) {
+      alert(err.message || 'Failed to assign responder');
+    } finally {
+      setAssigningId(null);
+    }
+  };
+
+  const filteredResponders = availableResponders.filter((resp) => {
+    if (roleFilter !== 'all' && resp.role !== roleFilter) return false;
+    if (!responderSearch) return true;
+    const term = responderSearch.toLowerCase();
+    const nameMatch = resp.name?.toLowerCase().includes(term);
+    const phoneMatch = resp.phone?.includes(term);
+    const skillMatch = resp.skills?.some((s) => s.toLowerCase().includes(term));
+    return nameMatch || phoneMatch || skillMatch;
+  });
 
   return (
     <div className="space-y-8 pb-16">
@@ -397,14 +445,19 @@ export const AdminDashboard = () => {
                   <p className="text-xs text-text-muted">{r.address} • Survivor: {r.survivorId?.name} ({r.survivorId?.phone})</p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                  {r.assignedTo?.responderName && (
+                    <span className="text-xs text-text-muted bg-slate-200/80 px-2 py-1 rounded-lg">
+                      Assigned to: <strong className="text-text">{r.assignedTo.responderName}</strong> ({r.assignedTo.responderRole})
+                    </span>
+                  )}
                   <Button
-                    variant="secondary"
+                    variant={r.assignedTo?.responderId ? 'secondary' : 'primary'}
                     size="sm"
-                    onClick={() => handleManualReassign(r._id)}
+                    onClick={() => openAssignModal(r)}
                     className="text-xs font-bold"
                   >
-                    Reassign Dispatch →
+                    {r.assignedTo?.responderId ? 'Reassign Dispatch →' : 'Assign Responder →'}
                   </Button>
                 </div>
               </div>
@@ -482,6 +535,245 @@ export const AdminDashboard = () => {
           </div>
         </div>
       )}
+
+      {/* Modal: Intelligent & Database Responder Assignment */}
+      <Modal
+        isOpen={assignModalOpen}
+        onClose={() => setAssignModalOpen(false)}
+        title="Assign Responder to Emergency"
+        maxWidth="max-w-3xl"
+      >
+        {selectedRequest && (
+          <div className="space-y-6">
+            {/* Request Summary Card */}
+            <div className="p-4 rounded-xl bg-slate-50 border border-border space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Badge type="priority">{selectedRequest.priority}</Badge>
+                  <Badge type="status">{selectedRequest.status}</Badge>
+                  <span className="text-xs font-semibold text-text-muted">
+                    Category: <strong className="text-text">{selectedRequest.category}</strong>
+                  </span>
+                </div>
+                {selectedRequest.assignedTo?.responderName && (
+                  <span className="text-xs font-medium text-primary">
+                    Currently assigned to: {selectedRequest.assignedTo.responderName}
+                  </span>
+                )}
+              </div>
+              <h4 className="text-base font-bold text-text">
+                {selectedRequest.title || selectedRequest.description?.slice(0, 60)}
+              </h4>
+              <p className="text-xs text-text-muted">
+                {selectedRequest.description}
+              </p>
+              <div className="pt-2 border-t border-border/60 flex flex-wrap gap-4 text-xs text-text-muted">
+                <span className="flex items-center gap-1">
+                  <MapPin className="w-3.5 h-3.5 text-danger" />
+                  {selectedRequest.address || 'Location provided on map'}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Users className="w-3.5 h-3.5" />
+                  Survivor: {selectedRequest.survivorId?.name || 'Unknown'} (
+                  {selectedRequest.survivorId?.phone || 'No phone'})
+                </span>
+              </div>
+            </div>
+
+            {/* Section 1: AI / Location Matched Responders */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-bold text-text flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-warning fill-warning" />
+                  Intelligent Recommended Matches (Nearest & Skills-Matched)
+                </h4>
+                {loadingMatches && (
+                  <span className="text-xs text-text-muted flex items-center gap-1">
+                    <RefreshCw className="w-3 h-3 animate-spin" /> Calculating matches...
+                  </span>
+                )}
+              </div>
+
+              {!loadingMatches && recommendedMatches.length === 0 && (
+                <div className="p-3 rounded-lg bg-slate-50 border border-dashed border-border text-center text-xs text-text-muted">
+                  No direct automated matches within volunteer service radius. Choose from the verified responder directory below.
+                </div>
+              )}
+
+              {recommendedMatches.length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {recommendedMatches.slice(0, 4).map((m) => {
+                    const volunteerUser = m.user || {};
+                    const isAssigning = assigningId === volunteerUser._id;
+                    return (
+                      <div
+                        key={volunteerUser._id || m.profile?._id}
+                        className="p-3 rounded-xl border border-primary/20 bg-primary/5 hover:border-primary/40 transition-all flex flex-col justify-between space-y-2"
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-text">{volunteerUser.name}</span>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                              m.matchLabel === 'Great' ? 'bg-success/20 text-success' : 'bg-primary/20 text-primary'
+                            }`}>
+                              {m.matchLabel} Match ({Math.round(m.score * 100)}%)
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-text-muted">
+                            {m.distanceKm} km away • {volunteerUser.phone}
+                          </p>
+                          {m.matchedSkills && m.matchedSkills.length > 0 && (
+                            <div className="flex flex-wrap gap-1 pt-1">
+                              {m.matchedSkills.map((sk) => (
+                                <span key={sk} className="text-[10px] bg-white border border-border px-1.5 py-0.5 rounded font-medium text-text">
+                                  {sk}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="primary"
+                          className="w-full text-xs font-bold mt-2"
+                          disabled={isAssigning}
+                          onClick={() => handleConfirmAssignment(volunteerUser._id)}
+                        >
+                          {isAssigning ? 'Dispatching...' : 'Assign This Match →'}
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Section 2: All Verified Database Responders Directory */}
+            <div className="space-y-3 pt-3 border-t border-border">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <h4 className="text-sm font-bold text-text flex items-center gap-1.5">
+                  <Users className="w-4 h-4 text-primary" />
+                  All Verified Responders from Database
+                </h4>
+                <div className="flex items-center gap-2">
+                  <div className="flex rounded-lg bg-slate-100 p-0.5 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setRoleFilter('all')}
+                      className={`px-2.5 py-1 rounded-md font-semibold transition-all ${
+                        roleFilter === 'all' ? 'bg-white text-text shadow-sm' : 'text-text-muted'
+                      }`}
+                    >
+                      All
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRoleFilter('volunteer')}
+                      className={`px-2.5 py-1 rounded-md font-semibold transition-all ${
+                        roleFilter === 'volunteer' ? 'bg-white text-text shadow-sm' : 'text-text-muted'
+                      }`}
+                    >
+                      Volunteers
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRoleFilter('ngo')}
+                      className={`px-2.5 py-1 rounded-md font-semibold transition-all ${
+                        roleFilter === 'ngo' ? 'bg-white text-text shadow-sm' : 'text-text-muted'
+                      }`}
+                    >
+                      NGOs
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRoleFilter('shelter')}
+                      className={`px-2.5 py-1 rounded-md font-semibold transition-all ${
+                        roleFilter === 'shelter' ? 'bg-white text-text shadow-sm' : 'text-text-muted'
+                      }`}
+                    >
+                      Shelters
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRoleFilter('resource_provider')}
+                      className={`px-2.5 py-1 rounded-md font-semibold transition-all ${
+                        roleFilter === 'resource_provider' ? 'bg-white text-text shadow-sm' : 'text-text-muted'
+                      }`}
+                    >
+                      Providers
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Search box */}
+              <div className="relative">
+                <Search className="w-4 h-4 text-text-muted absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Search responder by name, phone, or skill..."
+                  value={responderSearch}
+                  onChange={(e) => setResponderSearch(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-border bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                />
+              </div>
+
+              {/* Responders List */}
+              <div className="max-h-56 overflow-y-auto space-y-2 pr-1">
+                {filteredResponders.length === 0 ? (
+                  <p className="text-center py-6 text-xs text-text-muted">
+                    No verified responders found matching criteria.
+                  </p>
+                ) : (
+                  filteredResponders.map((resp) => {
+                    const isAssigning = assigningId === resp._id;
+                    return (
+                      <div
+                        key={resp._id}
+                        className="p-3 rounded-xl border border-border bg-white hover:bg-slate-50 transition-colors flex items-center justify-between gap-3"
+                      >
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-text">{resp.name}</span>
+                            <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${
+                              resp.role === 'ngo' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+                            }`}>
+                              {resp.role}
+                            </span>
+                            {resp.role === 'volunteer' && (
+                              <span className="text-[10px] text-text-muted">
+                                Active tasks: {resp.activeTaskCount || 0}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-text-muted">
+                            Phone: {resp.phone} • {resp.email}
+                          </p>
+                          {resp.skills && resp.skills.length > 0 && (
+                            <p className="text-[10px] text-text-muted">
+                              Skills: {resp.skills.join(', ')}
+                            </p>
+                          )}
+                        </div>
+
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          disabled={isAssigning}
+                          onClick={() => handleConfirmAssignment(resp._id)}
+                          className="text-xs font-bold whitespace-nowrap"
+                        >
+                          {isAssigning ? 'Assigning...' : 'Assign'}
+                        </Button>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

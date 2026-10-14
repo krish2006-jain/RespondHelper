@@ -5,6 +5,7 @@ import {
   toggleBlockUser,
   getAnalytics,
   reassignRequest,
+  getAvailableResponders,
 } from '../controllers/adminController.js';
 import {
   getVerificationQueue,
@@ -20,6 +21,7 @@ router.use(requireRole('admin'));
 
 router.get('/stats', getAdminStats);
 router.get('/users', getUsers);
+router.get('/responders', getAvailableResponders);
 router.patch('/users/:id/block', toggleBlockUser);
 router.get('/analytics', getAnalytics);
 router.post('/requests/:id/reassign', reassignRequest);

@@ -3,6 +3,7 @@ import api from './client';
 export const adminAPI = {
   getStats: () => api.get('/admin/stats'),
   getUsers: (params) => api.get('/admin/users', { params }),
+  getResponders: () => api.get('/admin/responders'),
   toggleBlockUser: (id) => api.patch(`/admin/users/${id}/block`),
   getAnalytics: () => api.get('/admin/analytics'),
   reassignRequest: (requestId, responderId) => api.post(`/admin/requests/${requestId}/reassign`, { responderId }),

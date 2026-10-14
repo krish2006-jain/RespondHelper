@@ -22,27 +22,34 @@ export const ResourceAssignmentPage = () => {
   const [requests, setRequests] = useState([]);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [matchData, setMatchData] = useState(null);
+  const [allResources, setAllResources] = useState([]);
   const [loadingRequests, setLoadingRequests] = useState(true);
   const [loadingMatches, setLoadingMatches] = useState(false);
   const [assigningId, setAssigningId] = useState(null);
 
-  useEffect(() => {
-    const fetchOpenRequests = async () => {
-      try {
-        const res = await requestAPI.getAll({ status: 'Submitted' });
-        const list = res.data?.requests || [];
-        setRequests(list);
-        if (list.length > 0) {
-          const target = queryParamReqId ? list.find((r) => r._id === queryParamReqId) || list[0] : list[0];
-          setSelectedRequest(target);
-        }
-      } catch (err) {
-        console.error('Failed to load requests:', err);
-      } finally {
-        setLoadingRequests(false);
-      }
-    };
+  const fetchOpenRequests = async () => {
+    try {
+      const [reqsRes, resListRes] = await Promise.all([
+        requestAPI.getAll({ status: 'Submitted,Verified,Assigned,In Progress' }),
+        resourceAPI.getAll({ limit: 50 }),
+      ]);
 
+      const list = reqsRes.data?.requests || [];
+      setRequests(list);
+      setAllResources(resListRes.data?.resources || []);
+
+      if (list.length > 0) {
+        const target = queryParamReqId ? list.find((r) => r._id === queryParamReqId) || list[0] : list[0];
+        setSelectedRequest(target);
+      }
+    } catch (err) {
+      console.error('Failed to load requests & inventory:', err);
+    } finally {
+      setLoadingRequests(false);
+    }
+  };
+
+  useEffect(() => {
     fetchOpenRequests();
   }, [queryParamReqId]);
 
@@ -64,26 +71,25 @@ export const ResourceAssignmentPage = () => {
     fetchMatches();
   }, [selectedRequest]);
 
-  const handleAssignResource = async (resourceMatch) => {
+  const handleAssignResource = async (resourceMatchOrItem) => {
+    const resObj = resourceMatchOrItem.resource || resourceMatchOrItem;
     const qty = window.prompt(
-      `Enter quantity of ${resourceMatch.resource.name} to dispatch (Available: ${resourceMatch.resource.quantity} ${resourceMatch.resource.unit}):`,
+      `Enter quantity of ${resObj.name} to dispatch (Available: ${resObj.quantity} ${resObj.unit}):`,
       selectedRequest.peopleAffected || 10
     );
 
     if (!qty || isNaN(qty) || Number(qty) <= 0) return;
 
-    setAssigningId(resourceMatch.resource._id);
+    setAssigningId(resObj._id);
     try {
-      await resourceAPI.assign(resourceMatch.resource._id, {
+      await resourceAPI.assign(resObj._id, {
         requestId: selectedRequest._id,
         quantityToAllocate: Number(qty),
       });
 
-      alert(`✅ Dispatched ${qty} ${resourceMatch.resource.unit} to ${selectedRequest.title || selectedRequest.category}!`);
-      // Refresh requests list
-      const updatedList = requests.filter((r) => r._id !== selectedRequest._id);
-      setRequests(updatedList);
-      setSelectedRequest(updatedList[0] || null);
+      alert(`✅ Dispatched ${qty} ${resObj.unit} to ${selectedRequest.title || selectedRequest.category}!`);
+      // Refresh requests list & resources
+      fetchOpenRequests();
     } catch (err) {
       alert(err.message || 'Failed to assign resource');
     } finally {
@@ -237,6 +243,56 @@ export const ResourceAssignmentPage = () => {
                                 Allocate & Dispatch →
                               </Button>
                             </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Direct Warehouse Inventory Dispatch */}
+                <div className="pt-4 border-t border-border space-y-3">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <Package className="w-4 h-4 text-primary" />
+                      All Warehouse Stock ({allResources.length} Items Available)
+                    </span>
+                  </h3>
+
+                  {allResources.length === 0 ? (
+                    <div className="p-4 rounded-xl bg-slate-50 border border-dashed border-border text-xs text-text-muted text-center">
+                      No stock items found in warehouse inventory. Go to "Manage Supplies" to add stock.
+                    </div>
+                  ) : (
+                    <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                      {allResources.map((res) => {
+                        const isAssigning = assigningId === res._id;
+                        return (
+                          <div
+                            key={res._id}
+                            className="p-3 rounded-xl border border-border bg-white hover:bg-slate-50 transition-colors flex items-center justify-between gap-3"
+                          >
+                            <div className="space-y-0.5 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <h4 className="text-xs font-bold text-text truncate">{res.name}</h4>
+                                <span className="text-[10px] font-semibold bg-slate-100 text-text-muted px-1.5 py-0.2 rounded">
+                                  {res.category}
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-text-muted">
+                                Available: <strong className="text-text">{res.quantity} {res.unit}</strong> • {res.address}
+                              </p>
+                            </div>
+
+                            <Button
+                              size="sm"
+                              variant="primary"
+                              disabled={isAssigning || res.quantity <= 0}
+                              onClick={() => handleAssignResource(res)}
+                              className="text-xs font-bold whitespace-nowrap"
+                            >
+                              {isAssigning ? 'Dispatching...' : 'Dispatch to SOS →'}
+                            </Button>
                           </div>
                         );
                       })}

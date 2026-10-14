@@ -57,8 +57,8 @@ export const LoginPage = () => {
   const handleDemoLogin = (demoEmail, demoPass) => {
     setEmail(demoEmail);
     setPassword(demoPass);
+    setError(null);
   };
-
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
@@ -95,6 +95,7 @@ export const LoginPage = () => {
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary text-sm bg-slate-50/50"
                 />
               </div>
+
             </div>
 
             <div>
@@ -142,7 +143,6 @@ export const LoginPage = () => {
           </div>
         </div>
 
-        {/* Right Panel: 1-Click Role Quick Login Switcher */}
         <div className="lg:col-span-6 space-y-4">
           <div className="bg-primary-subtle/50 p-6 rounded-2xl border border-primary/20 space-y-3">
             <div className="flex items-center gap-2 text-primary font-extrabold text-sm uppercase tracking-wide">
@@ -150,9 +150,8 @@ export const LoginPage = () => {
               <span>Instant 1-Click Demo Accounts</span>
             </div>
             <p className="text-xs text-text-muted">
-              Select any role below to test their respective dashboards and capabilities instantly:
+              Select a role to fill its demo email and password, then press Sign In.
             </p>
-
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2">
               {DEMO_ACCOUNTS.map((demo) => (
                 <button
@@ -162,9 +161,7 @@ export const LoginPage = () => {
                   className="flex flex-col text-left p-3 rounded-xl bg-white border border-border hover:border-primary hover:shadow-sm transition-all group"
                 >
                   <div className="flex items-center justify-between w-full">
-                    <span className="text-xs font-bold text-text group-hover:text-primary">
-                      {demo.badge}
-                    </span>
+                    <span className="text-xs font-bold text-text group-hover:text-primary">{demo.badge}</span>
                     <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-mono">
                       1-Click
                     </span>

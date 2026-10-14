@@ -28,7 +28,7 @@ export const NGODashboard = () => {
         const [resList, resAlerts, reqList] = await Promise.all([
           resourceAPI.getAll({ limit: 10 }),
           resourceAPI.getAlerts(),
-          requestAPI.getAll({ status: 'Submitted', limit: 5 }),
+          requestAPI.getAll({ status: 'Submitted,Verified,Assigned,In Progress', limit: 10 }),
         ]);
 
         setResources(resList.data?.resources || []);

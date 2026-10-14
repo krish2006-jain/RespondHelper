@@ -28,8 +28,8 @@ export const LandingPage = () => {
   const [mapEntities, setMapEntities] = useState({});
   const [stats, setStats] = useState({
     resolvedRequests: 0,
-    activeVolunteers: 1,
-    availableShelters: 1,
+    activeVolunteers: 0,
+    availableShelters: 0,
     peopleHelped: 0,
   });
 
@@ -52,7 +52,7 @@ export const LandingPage = () => {
           }));
         }
       } catch (err) {
-        // Fallback to sample preview
+        console.error('Failed to load public network data:', err);
       }
     };
 
@@ -141,15 +141,15 @@ export const LandingPage = () => {
                 <MapView entities={mapEntities} height="320px" zoom={11} />
                 <div className="flex justify-around text-center pt-2 border-t border-border/60 text-xs">
                   <div>
-                    <span className="block font-bold text-danger text-sm">{stats.activeEmergencies || 3}</span>
+                    <span className="block font-bold text-danger text-sm">{stats.activeEmergencies ?? 0}</span>
                     <span className="text-text-muted">Active Alerts</span>
                   </div>
                   <div>
-                    <span className="block font-bold text-success text-sm">{stats.activeVolunteers || 12}</span>
+                    <span className="block font-bold text-success text-sm">{stats.activeVolunteers ?? 0}</span>
                     <span className="text-text-muted">Volunteers Ready</span>
                   </div>
                   <div>
-                    <span className="block font-bold text-shelter text-sm">{stats.availableShelters || 4}</span>
+                    <span className="block font-bold text-shelter text-sm">{stats.availableShelters ?? 0}</span>
                     <span className="text-text-muted">Open Shelters</span>
                   </div>
                 </div>
@@ -213,19 +213,19 @@ export const LandingPage = () => {
         <div className="bg-primary text-white rounded-3xl p-8 sm:p-12 shadow-lg relative overflow-hidden">
           <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             <div>
-              <div className="text-3xl sm:text-5xl font-extrabold tabular-nums">{stats.resolvedRequests || 35}+</div>
+              <div className="text-3xl sm:text-5xl font-extrabold tabular-nums">{stats.resolvedRequests ?? 0}</div>
               <p className="text-xs sm:text-sm text-white/80 mt-1 font-medium">Emergencies Resolved</p>
             </div>
             <div>
-              <div className="text-3xl sm:text-5xl font-extrabold tabular-nums">{stats.activeVolunteers || 40}+</div>
+              <div className="text-3xl sm:text-5xl font-extrabold tabular-nums">{stats.activeVolunteers ?? 0}</div>
               <p className="text-xs sm:text-sm text-white/80 mt-1 font-medium">Active First Responders</p>
             </div>
             <div>
-              <div className="text-3xl sm:text-5xl font-extrabold tabular-nums">{stats.availableShelters || 10}+</div>
+              <div className="text-3xl sm:text-5xl font-extrabold tabular-nums">{stats.availableShelters ?? 0}</div>
               <p className="text-xs sm:text-sm text-white/80 mt-1 font-medium">Shelters Networked</p>
             </div>
             <div>
-              <div className="text-3xl sm:text-5xl font-extrabold tabular-nums">{stats.peopleHelped || 250}+</div>
+              <div className="text-3xl sm:text-5xl font-extrabold tabular-nums">{stats.peopleHelped ?? 0}</div>
               <p className="text-xs sm:text-sm text-white/80 mt-1 font-medium">Citizens Assisted</p>
             </div>
           </div>

@@ -15,11 +15,26 @@ export const findMatchingResources = async (request, options = {}) => {
   const reqPriority = request.priority || 'High';
   const reqQuantity = request.peopleAffected || 1;
 
-  // Search resources matching category (or supplies/equipment if generic)
+  // Category mapping: cross-match medical/medicine, food/rations, water, rescue
+  const categoryMap = {
+    'Medical Assistance': ['Medical Assistance', 'Medicine', 'Emergency Supplies'],
+    Medicine: ['Medicine', 'Medical Assistance', 'Emergency Supplies'],
+    Food: ['Food', 'Emergency Supplies'],
+    Water: ['Water', 'Emergency Supplies'],
+    Rescue: ['Rescue', 'Equipment', 'Emergency Supplies'],
+    Shelter: ['Shelter', 'Emergency Supplies'],
+    Clothing: ['Clothing', 'Emergency Supplies'],
+    Equipment: ['Equipment', 'Rescue', 'Emergency Supplies'],
+    'Emergency Supplies': ['Emergency Supplies', 'Medicine', 'Medical Assistance', 'Food', 'Water'],
+    Other: ['Other', 'Emergency Supplies'],
+  };
+
+  const matchingCategories = categoryMap[reqCategory] || [reqCategory, 'Emergency Supplies', 'Other'];
+
+  // Search resources matching category (or related supplies) with quantity > 0
   const candidateResources = await Resource.find({
-    category: reqCategory,
+    category: { $in: matchingCategories },
     quantity: { $gt: 0 },
-    alertStatus: { $ne: 'Expired' },
   }).populate('providerId', 'name phone email role');
 
   const urgencyMultiplier = {

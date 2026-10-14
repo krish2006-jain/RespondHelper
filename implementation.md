@@ -123,7 +123,6 @@ d:/RespondHelper/
 │       │   ├── apiResponse.js        # Standardized `{ success, message, data }` response helper
 │       │   └── logger.js
 │       ├── seed/
-│       │   └── seedData.js           # Comprehensive Mumbai-area sample dataset & admin seeder
 │       └── server.js                 # HTTP + WebSocket server entry point
 ├── .env                              # Root environment config (with MongoDB connection)
 ├── .env.example
@@ -367,7 +366,7 @@ DATABASE_CONNECTION=mongodb+srv://<db_username>:5YIbTFaINz0mioJb@cluster0.xzchff
 - Build Admin Command Center (`/admin`) with 8 KPI counters, live map, verification queue, request reassignment, and Recharts analytics.
 
 ### Step 9: Database Seeding & Comprehensive Testing
-- Write and run `seedData.js` to populate Mumbai area with 1 Admin, realistic volunteers, NGOs, shelters, resources, and live emergency requests.
+- Create accounts and operational records through the registration and administration workflows. The application does not ship with seeded or mock records.
 - Verify all role flows, API permissions, matching algorithms, socket notifications, and responsive views.
 
 ---

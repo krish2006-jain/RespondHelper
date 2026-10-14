@@ -79,7 +79,7 @@ export const VolunteerDashboard = () => {
             Welcome, {user?.name}
           </h1>
           <p className="text-xs sm:text-sm text-text-muted">
-            Skills: {profile?.skills?.join(', ') || 'First Aid'} • Service Radius: {profile?.serviceRadiusKm || 25} km
+            Skills: {profile?.skills?.join(', ') || 'No skills listed'} • Service Radius: {profile?.serviceRadiusKm ?? 0} km
           </p>
         </div>
 
@@ -116,14 +116,14 @@ export const VolunteerDashboard = () => {
         />
         <StatCard
           title="Missions Completed"
-          value={profile?.totalTasksCompleted || 14}
+          value={profile?.totalTasksCompleted ?? 0}
           color="success"
           icon={CheckCircle2}
           subtext="Verified crisis resolutions"
         />
         <StatCard
           title="Citizens Assisted"
-          value={profile?.peopleHelpedCount || 38}
+          value={profile?.peopleHelpedCount ?? 0}
           color="primary"
           icon={Users}
           subtext="Lives impacted in distress"
@@ -192,7 +192,7 @@ export const VolunteerDashboard = () => {
             <ShieldCheck className="w-10 h-10 text-success mx-auto" />
             <h4 className="font-bold text-sm text-text">No urgent nearby requests</h4>
             <p className="text-xs text-text-muted">
-              All active emergencies in your {profile?.serviceRadiusKm || 25} km zone are currently handled.
+              All active emergencies in your {profile?.serviceRadiusKm ?? 0} km zone are currently handled.
             </p>
           </div>
         ) : (
