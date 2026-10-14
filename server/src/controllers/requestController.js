@@ -4,7 +4,7 @@ import { VolunteerProfile } from '../models/VolunteerProfile.js';
 import { TaskHistory } from '../models/TaskHistory.js';
 import { sendSuccess, sendError } from '../utils/apiResponse.js';
 import { createNotification } from '../services/notificationService.js';
-import { findMatchingResources, findMatchingVolunteers } from '../services/matchingEngine.js';
+import { findMatchingResources, findMatchingVolunteers, findMatchingShelters } from '../services/matchingEngine.js';
 import { getIO } from '../config/socket.js';
 import { ENV } from '../config/env.js';
 
@@ -199,6 +199,7 @@ export const getRequestMatches = async (req, res, next) => {
 
     const resourceMatches = await findMatchingResources(request);
     const volunteerMatches = await findMatchingVolunteers(request);
+    const shelterMatches = await findMatchingShelters(request);
 
     return sendSuccess(
       res,
@@ -206,6 +207,7 @@ export const getRequestMatches = async (req, res, next) => {
         request,
         recommendedResources: resourceMatches,
         recommendedVolunteers: volunteerMatches,
+        recommendedShelters: shelterMatches,
       },
       'Matches calculated'
     );

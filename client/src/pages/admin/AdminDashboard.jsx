@@ -67,10 +67,11 @@ export const AdminDashboard = () => {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [availableResponders, setAvailableResponders] = useState([]);
   const [recommendedMatches, setRecommendedMatches] = useState([]);
+  const [recommendedShelters, setRecommendedShelters] = useState([]);
   const [loadingMatches, setLoadingMatches] = useState(false);
   const [assigningId, setAssigningId] = useState(null);
   const [responderSearch, setResponderSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState('all'); // 'all' | 'volunteer' | 'ngo'
+  const [roleFilter, setRoleFilter] = useState('all'); // 'all' | 'volunteer' | 'ngo' | 'shelter'
 
   const loadAdminData = async () => {
     try {
@@ -139,6 +140,7 @@ export const AdminDashboard = () => {
       ]);
       setAvailableResponders(respondersRes.data || []);
       setRecommendedMatches(matchesRes.data?.recommendedVolunteers || []);
+      setRecommendedShelters(matchesRes.data?.recommendedShelters || []);
     } catch (err) {
       console.error('Failed to load assignment options:', err);
     } finally {
@@ -597,6 +599,55 @@ export const AdminDashboard = () => {
               {!loadingMatches && recommendedMatches.length === 0 && (
                 <div className="p-3 rounded-lg bg-slate-50 border border-dashed border-border text-center text-xs text-text-muted">
                   No direct automated matches within volunteer service radius. Choose from the verified responder directory below.
+                </div>
+              )}
+
+              {/* Shelter Matches if applicable */}
+              {recommendedShelters.length > 0 && (
+                <div className="space-y-2">
+                  <h5 className="text-xs font-bold text-shelter flex items-center gap-1.5 uppercase tracking-wide">
+                    <Home className="w-3.5 h-3.5" />
+                    Recommended Shelter Camps (Vacant Beds & Proximity)
+                  </h5>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {recommendedShelters.map((sm) => {
+                      const shelterObj = sm.shelter || {};
+                      const managerObj = sm.manager || shelterObj.managerId || {};
+                      const isAssigning = assigningId === (managerObj._id || shelterObj._id);
+                      return (
+                        <div
+                          key={shelterObj._id}
+                          className="p-3.5 rounded-xl border-2 border-shelter/30 bg-purple-50/50 hover:border-shelter transition-all flex flex-col justify-between space-y-2"
+                        >
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-bold text-text truncate max-w-[180px]">
+                                {shelterObj.shelterName}
+                              </span>
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-shelter/20 text-shelter">
+                                {sm.availableSpaces} Beds Vacant
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-text-muted">
+                              {sm.distanceKm} km away • {shelterObj.address}
+                            </p>
+                            <p className="text-[11px] font-medium text-text">
+                              Manager: {managerObj.name || 'Shelter Manager'} ({managerObj.phone || shelterObj.contactPhone})
+                            </p>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="primary"
+                            className="w-full text-xs font-bold mt-1 bg-shelter hover:bg-shelter/90 border-transparent text-white"
+                            disabled={isAssigning}
+                            onClick={() => handleConfirmAssignment(managerObj._id || shelterObj.managerId)}
+                          >
+                            {isAssigning ? 'Assigning...' : 'Assign to Shelter Camp →'}
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
 

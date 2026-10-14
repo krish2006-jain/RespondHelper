@@ -1,6 +1,7 @@
 import { Resource } from '../models/Resource.js';
 import { VolunteerProfile } from '../models/VolunteerProfile.js';
 import { User } from '../models/User.js';
+import { Shelter } from '../models/Shelter.js';
 import { calculateDistanceKm } from '../utils/geoUtils.js';
 import { ENV } from '../config/env.js';
 
@@ -191,4 +192,52 @@ export const findMatchingVolunteers = async (request, options = {}) => {
     .slice(0, limit);
 
   return scoredVolunteers;
+};
+
+/**
+ * Intelligent Shelter Matching Engine
+ * Distance + Available Bed Capacity + Priority
+ */
+export const findMatchingShelters = async (request, options = {}) => {
+  const { maxRadiusKm = 50, limit = 5 } = options;
+  const reqCoords = request.location?.coordinates || [72.8777, 19.0760];
+  const reqPeople = request.peopleAffected || 1;
+
+  const shelters = await Shelter.find({
+    isActive: true,
+    status: { $ne: 'Closed' },
+  }).populate('managerId', 'name phone email role address');
+
+  const scoredShelters = shelters
+    .map((shelter) => {
+      const sCoords = shelter.location?.coordinates || [72.8777, 19.0760];
+      const distanceKm = calculateDistanceKm(reqCoords, sCoords);
+      if (distanceKm > maxRadiusKm) return null;
+
+      const availableSpaces = Math.max(0, shelter.totalCapacity - shelter.currentOccupancy);
+      const hasEnoughSpace = availableSpaces >= reqPeople;
+
+      // Distance score (closer = higher)
+      const distanceScore = Math.max(0, 1 - distanceKm / maxRadiusKm);
+      // Capacity score
+      const capacityScore = hasEnoughSpace ? 1.0 : (availableSpaces / Math.max(1, reqPeople)) * 0.5;
+
+      const totalScore = distanceScore * 0.5 + capacityScore * 0.5;
+
+      return {
+        shelter,
+        manager: shelter.managerId,
+        distanceKm,
+        availableSpaces,
+        totalCapacity: shelter.totalCapacity,
+        hasEnoughSpace,
+        score: Math.round(totalScore * 100) / 100,
+        reason: `${shelter.shelterName} • ${availableSpaces} beds available (${distanceKm} km away)`,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit);
+
+  return scoredShelters;
 };

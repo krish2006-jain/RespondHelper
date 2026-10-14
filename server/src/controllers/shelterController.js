@@ -1,6 +1,9 @@
 import { Shelter } from '../models/Shelter.js';
+import { Request } from '../models/Request.js';
+import { Assignment } from '../models/Assignment.js';
 import { calculateDistanceKm } from '../utils/geoUtils.js';
 import { sendSuccess, sendError } from '../utils/apiResponse.js';
+import { createNotification } from '../services/notificationService.js';
 import { getIO } from '../config/socket.js';
 import { ENV } from '../config/env.js';
 
@@ -248,6 +251,270 @@ export const deleteShelter = async (req, res, next) => {
     await shelter.save();
 
     return sendSuccess(res, null, 'Shelter removed successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET /shelters/assigned-requests (for Shelter Manager)
+export const getAssignedRequests = async (req, res, next) => {
+  try {
+    const shelter = await Shelter.findOne({ managerId: req.user._id });
+
+    // Requests assigned directly to this shelter manager
+    const assignedRequests = await Request.find({
+      'assignedTo.responderId': req.user._id,
+    })
+      .populate('survivorId', 'name phone email address')
+      .sort({ updatedAt: -1 });
+
+    // Open unassigned shelter requests (nearby / in open queue)
+    const openShelterRequests = await Request.find({
+      category: 'Shelter',
+      status: { $in: ['Submitted', 'Verified'] },
+      $or: [
+        { 'assignedTo.responderId': null },
+        { 'assignedTo.responderId': { $exists: false } },
+      ],
+    })
+      .populate('survivorId', 'name phone email address')
+      .sort({ createdAt: -1 })
+      .limit(10);
+
+    return sendSuccess(
+      res,
+      {
+        shelter,
+        assignedRequests,
+        openShelterRequests,
+      },
+      'Shelter requests retrieved'
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+// POST /shelters/requests/:id/accept
+export const acceptShelterRequest = async (req, res, next) => {
+  try {
+    const request = await Request.findById(req.params.id).populate('survivorId', 'name phone email');
+    if (!request) {
+      return sendError(res, 'Request not found', 404);
+    }
+
+    const shelter = await Shelter.findOne({ managerId: req.user._id });
+    const shelterName = shelter ? shelter.shelterName : `${req.user.name}'s Shelter`;
+
+    request.status = 'In Progress';
+    if (!request.assignedTo) {
+      request.assignedTo = {
+        responderId: req.user._id,
+        responderRole: 'shelter',
+        responderName: req.user.name,
+        responderPhone: req.user.phone,
+        assignedAt: new Date(),
+        taskStatus: 'Accepted',
+      };
+    } else {
+      request.assignedTo.taskStatus = 'Accepted';
+    }
+
+    request.statusHistory.push({
+      status: 'In Progress',
+      updatedBy: req.user._id,
+      updatedByName: req.user.name,
+      note: `Shelter request accepted by Shelter Manager (${shelterName}). Preparing admission.`,
+      timestamp: new Date(),
+    });
+    await request.save();
+
+    await Assignment.findOneAndUpdate(
+      { requestId: request._id },
+      {
+        responderId: req.user._id,
+        responderRole: 'shelter',
+        status: 'Accepted',
+        startedAt: new Date(),
+      },
+      { upsert: true }
+    );
+
+    const survivorUserId = request.survivorId?._id || request.survivorId;
+    if (survivorUserId) {
+      await createNotification({
+        recipient: survivorUserId,
+        title: 'Shelter Accommodation Accepted!',
+        message: `${shelterName} has accepted your shelter request. You can proceed to the shelter location: ${shelter?.address || req.user.address || 'Camp'}.`,
+        type: 'assignment',
+        priority: 'high',
+        link: `/survivor/requests/${request._id}`,
+      });
+    }
+
+    const io = getIO();
+    if (io) {
+      io.to(`request:${request._id}`).emit('request:status_changed', {
+        requestId: request._id,
+        status: 'In Progress',
+        taskStatus: 'Accepted',
+        responder: { name: req.user.name, phone: req.user.phone, role: 'shelter' },
+      });
+      if (survivorUserId) {
+        io.to(`user:${survivorUserId}`).emit('request:status_changed', {
+          requestId: request._id,
+          status: 'In Progress',
+          taskStatus: 'Accepted',
+        });
+      }
+    }
+
+    return sendSuccess(res, request, 'Shelter request accepted successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+// POST /shelters/requests/:id/allocate (Check-in & Allocate Bed)
+export const allocateShelterBed = async (req, res, next) => {
+  try {
+    const { bedsAllocated } = req.body;
+    const request = await Request.findById(req.params.id).populate('survivorId', 'name phone email');
+    if (!request) {
+      return sendError(res, 'Request not found', 404);
+    }
+
+    const shelter = await Shelter.findOne({ managerId: req.user._id });
+    if (!shelter) {
+      return sendError(res, 'No shelter registered for this manager', 404);
+    }
+
+    const bedsCount = Number(bedsAllocated) || request.peopleAffected || 1;
+    shelter.currentOccupancy = Math.min(shelter.totalCapacity, shelter.currentOccupancy + bedsCount);
+    await shelter.save();
+
+    request.status = 'Resolved';
+    if (!request.assignedTo) {
+      request.assignedTo = {
+        responderId: req.user._id,
+        responderRole: 'shelter',
+        responderName: req.user.name,
+        responderPhone: req.user.phone,
+        assignedAt: new Date(),
+        taskStatus: 'Completed',
+      };
+    } else {
+      request.assignedTo.taskStatus = 'Completed';
+    }
+
+    request.statusHistory.push({
+      status: 'Resolved',
+      updatedBy: req.user._id,
+      updatedByName: req.user.name,
+      note: `Admitted to ${shelter.shelterName}. Allocated ${bedsCount} bed(s). Occupancy updated to ${shelter.currentOccupancy}/${shelter.totalCapacity}.`,
+      timestamp: new Date(),
+    });
+    await request.save();
+
+    await Assignment.findOneAndUpdate(
+      { requestId: request._id },
+      {
+        responderId: req.user._id,
+        responderRole: 'shelter',
+        status: 'Completed',
+        completedAt: new Date(),
+      },
+      { upsert: true }
+    );
+
+    const survivorUserId = request.survivorId?._id || request.survivorId;
+    if (survivorUserId) {
+      await createNotification({
+        recipient: survivorUserId,
+        title: 'Safe Shelter Beds Allocated!',
+        message: `You and your family (${bedsCount} evacuee(s)) are checked in at ${shelter.shelterName}. Address: ${shelter.address}.`,
+        type: 'status_update',
+        priority: 'high',
+        link: `/survivor/requests/${request._id}`,
+      });
+    }
+
+    const io = getIO();
+    if (io) {
+      io.emit('shelter:occupancy_changed', {
+        shelterId: shelter._id,
+        currentOccupancy: shelter.currentOccupancy,
+        totalCapacity: shelter.totalCapacity,
+        status: shelter.status,
+        availableSpaces: shelter.totalCapacity - shelter.currentOccupancy,
+      });
+      io.emit('map:entity_updated', { type: 'shelter', entity: shelter });
+      io.to(`request:${request._id}`).emit('request:status_changed', {
+        requestId: request._id,
+        status: 'Resolved',
+        taskStatus: 'Completed',
+      });
+      if (survivorUserId) {
+        io.to(`user:${survivorUserId}`).emit('request:status_changed', {
+          requestId: request._id,
+          status: 'Resolved',
+          taskStatus: 'Completed',
+        });
+      }
+    }
+
+    return sendSuccess(res, { request, shelter }, `Successfully admitted evacuee(s) and allocated ${bedsCount} bed(s)!`);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// POST /shelters/requests/:id/decline
+export const declineShelterRequest = async (req, res, next) => {
+  try {
+    const { reason = 'Shelter at full capacity' } = req.body;
+    const request = await Request.findById(req.params.id);
+    if (!request) {
+      return sendError(res, 'Request not found', 404);
+    }
+
+    request.status = 'Submitted';
+    request.assignedTo = undefined;
+    request.statusHistory.push({
+      status: 'Submitted',
+      updatedBy: req.user._id,
+      updatedByName: req.user.name,
+      note: `Shelter manager declined request: ${reason}. Returned to dispatch queue.`,
+      timestamp: new Date(),
+    });
+    await request.save();
+
+    await Assignment.findOneAndUpdate(
+      { requestId: request._id, responderId: req.user._id },
+      { status: 'Declined', declineReason: reason }
+    );
+
+    // Notify Admins
+    await createNotification({
+      targetRole: 'admin',
+      title: 'Shelter Request Declined by Manager',
+      message: `${req.user.name} declined request "${request.title || request.category}" (${reason}). Needs reassignment.`,
+      type: 'assignment',
+      priority: 'high',
+      link: '/admin?tab=requests',
+    });
+
+    const io = getIO();
+    if (io) {
+      io.emit('request:created', request);
+      io.to(`request:${request._id}`).emit('request:status_changed', {
+        requestId: request._id,
+        status: 'Submitted',
+        note: `Declined by shelter manager: ${reason}`,
+      });
+    }
+
+    return sendSuccess(res, request, 'Shelter request declined and returned to dispatch queue');
   } catch (error) {
     next(error);
   }

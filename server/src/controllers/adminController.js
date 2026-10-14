@@ -212,7 +212,12 @@ export const reassignRequest = async (req, res, next) => {
       message: `Admin assigned you to an emergency for ${request.category}.`,
       type: 'assignment',
       priority: 'high',
-      link: responder.role === 'volunteer' ? `/volunteer/tasks/${request._id}` : `/ngo/assignments`,
+      link:
+        responder.role === 'volunteer'
+          ? `/volunteer/tasks/${request._id}`
+          : responder.role === 'shelter'
+          ? '/shelter'
+          : '/ngo/assignments',
     });
 
     const io = getIO();
